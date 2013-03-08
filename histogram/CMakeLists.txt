@@ -1,2 +1,2 @@
-project(histograma)
-add_executable(histograma main.c)
+project(histogram)
+add_executable(histogram main.c)
