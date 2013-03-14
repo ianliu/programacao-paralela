@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-	char *greeting[MAX_STRING];
+	char greeting[MAX_STRING];
 	int comm_sz;
 	int my_rank;
 
