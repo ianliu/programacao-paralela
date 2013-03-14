@@ -1,0 +1,1 @@
+exe "set makeprg=" . 'make\ -C\ \"' . expand('<sfile>:p:h') . '/build\"'
