@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /**
  * Sets the data type.
@@ -86,6 +87,36 @@ void histogram(data_t *local_data, int local_data_len, data_t *data_bounds,
 	}
 }
 
+/**
+ * Prints the usage string to stderr and exits.
+ */
+void usage(const char *prog)
+{
+	fprintf(stderr, "Usage: %s [-h] | [-n DATA SIZE] [-b BUCKET SIZE]\n", prog);
+	exit(1);
+}
+
+/**
+ * Get the command line arguments and change global variables.
+ */
+void get_options(int argc, char **argv)
+{
+	int op;
+	while ((op = getopt(argc, argv, "hn:b:")) != -1) {
+		switch (op) {
+			case 'n':
+				DATA_LEN = atoi(optarg);
+				break;
+			case 'b':
+				BUCKET_LEN = atoi(optarg);
+				break;
+			case 'h':
+			default:
+				usage(argv[0]);
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int rank;
@@ -94,6 +125,8 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &n_ranks);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	get_options(argc, argv);
 
 	int n_elements = DATA_LEN / n_ranks + 1;
 	data_t data_bounds[2];
