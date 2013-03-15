@@ -1,3 +1,4 @@
+#include <math.h>
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,20 @@ void get_scatter_info(int *sendcnts, int *displs, int n_ranks, int n)
 	}
 }
 
+/**
+ * Calculate the histogram for the local problem given by @local_data and place
+ * the result in @bucket_cache.
+ */
+void histogram(int *local_data, int local_data_len,
+		int *bucket_cache, int cache_len)
+{
+	for (int i = 0; i < local_data_len; i++) {
+		double r = (double)(local_data[i] - BUCKET_START) / BUCKET_STEP;
+		int b = ceil(r);
+		bucket_cache[b]++;
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int rank;
@@ -79,10 +94,11 @@ int main(int argc, char *argv[])
 			dataout, n_elements, MPI_INT,
 			0, MPI_COMM_WORLD);
 
-	printf("[Rank %d]\n", rank);
+	int *bucket = get_bucket_cache(BUCKET_LEN);
+	histogram(dataout, sendcnts[rank], bucket, BUCKET_LEN);
+
 	for (int i = 0; i < sendcnts[rank]; i++)
 		printf("%d ", dataout[i]);
-	puts("");
 
 	MPI_Finalize();
 	return 0;
