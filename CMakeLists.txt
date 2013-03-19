@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package(C99 REQUIRED)
-add_definitions(${C99_C_FLAGS})
+add_definitions(${C99_C_FLAGS} -D_XOPEN_SOURCE)
 find_package(MPI REQUIRED)
 include_directories("${CMAKE_SOURCE_DIR}/common")
 
