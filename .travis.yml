@@ -1,0 +1,7 @@
+language: c
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq openmpi-bin libopenmpi-dev
+
+before_script: mkdir -p build
+script: ( cd build && cmake .. && make )
