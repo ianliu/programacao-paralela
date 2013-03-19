@@ -3,5 +3,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package(C99 REQUIRED)
 add_definitions(${C99_C_FLAGS})
 find_package(MPI REQUIRED)
+include_directories("${CMAKE_SOURCE_DIR}/common")
+
+add_subdirectory(common)
 add_subdirectory(histogram)
 add_subdirectory(sumtree)
