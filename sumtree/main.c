@@ -30,6 +30,27 @@ typedef enum {
 	NONE
 } ProcessType;
 
+void usage(const char *prog)
+{
+	fprintf(stderr, "Usage: %s [-h] | [-n DATA LENGTH]\n", prog);
+	exit(1);
+}
+
+void get_options(int argc, char *argv[])
+{
+	int opt;
+	while ((opt = getopt(argc, argv, "hn:")) != -1) {
+		switch (opt) {
+			case 'n':
+				DATA_LEN = atoi(optarg);
+				break;
+			case 'h':
+			default:
+				usage(argv[0]);
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int rank;
@@ -38,6 +59,8 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &n_ranks);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	get_options(argc, argv);
 
 	int *data;
 	int sendcnts[n_ranks];
