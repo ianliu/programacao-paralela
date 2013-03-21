@@ -1,5 +1,5 @@
 #include <common.h>
-#include <limits.h>
+#include <float.h>
 #include <math.h>
 #include <mpi.h>
 #include <stdio.h>
@@ -11,6 +11,8 @@
  * Sets the data type.
  */
 #define DATA_FMT "f"
+#define DATA_MAX FLT_MAX
+#define DATA_MIN FLT_MIN
 typedef float data_t;
 
 /**
@@ -24,7 +26,9 @@ static int DATA_LEN = 10;
 static int BUCKET_LEN = 4;
 
 /**
- * Fetches data from stdin.
+ * Fetches data from stdin and sets the @data_bounds, ie
+ * data_bounds[0] = min(data),
+ * data_bounds[1] = max(data).
  */
 data_t *get_data(int len, data_t *data_bounds)
 {
@@ -114,7 +118,7 @@ int main(int argc, char *argv[])
 	get_options(argc, argv);
 
 	int n_elements = DATA_LEN / n_ranks + 1;
-	data_t data_bounds[2];
+	data_t data_bounds[2] = {DATA_MAX, DATA_MIN};
 	data_t *datain;
 	data_t dataout[n_elements];
 	int displs[n_ranks];
@@ -124,7 +128,6 @@ int main(int argc, char *argv[])
 		datain = get_data(DATA_LEN, data_bounds);
 
 	MPI_Bcast(data_bounds, 2, MPI_INT, 0, MPI_COMM_WORLD);
-
 	get_scatter_info(sendcnts, displs, n_ranks, DATA_LEN);
 	MPI_Scatterv(datain, sendcnts, displs, MPI_INT,
 			dataout, n_elements, MPI_INT,
@@ -141,10 +144,14 @@ int main(int argc, char *argv[])
 			MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	if (rank == 0) {
-		printf("[Histogram result]\n");
+		double dmin = (double)data_bounds[0];
+		double delt = (double)(data_bounds[1] - dmin);
+		printf("len %d\n", BUCKET_LEN);
+		printf("min %lf\n", dmin);
+		printf("del %lf\n", delt);
 		for (int i = 0; i < BUCKET_LEN; i++)
 			printf("%d ", result[i]);
-		puts("");
+		printf("\n");
 	}
 
 	MPI_Finalize();
