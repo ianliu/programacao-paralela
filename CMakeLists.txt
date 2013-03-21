@@ -6,5 +6,6 @@ find_package(MPI REQUIRED)
 include_directories("${CMAKE_SOURCE_DIR}/common")
 
 add_subdirectory(common)
+add_subdirectory(greeting)
 add_subdirectory(histogram)
 add_subdirectory(sumtree)
