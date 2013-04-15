@@ -1,0 +1,46 @@
+Soma em árvore
+==============
+
+Para realizarmos a soma em árvore, devemos determinar quais nós recebem
+e quais nós enviam dados em cada tempo t. No esquema apresentado abaixo,
+as letras 'o' representam nós; as linhas '|' representam que o nó
+indicado continua vivo; as linhas '.' representam os nós que enviaram
+seus resultados parciais e morreram.
+
+Nó  0   1   2   3   4   5   6   7   Tempo
+
+    o   o   o   o   o   o   o   o     0
+    |  .    |  .    |  .    |  .
+    | .     | .     | .     | .
+    |.      |.      |.      |.
+    o       o       o       o         1
+    |     .         |     .
+    |   .           |   .
+    | .             | .
+    o               o                 2
+    |            .
+    |      .
+    | .
+    o                                 3
+
+Para chegarmos na fórmula geral, vamos analisar o que ocorre em cada
+tempo t:
+
+Se t=0, então os nós k que satisfazem k ≡ 0 (mod 2) irão receber as
+somas parciais dos nós l = k + 1.
+
+Se t=1, então os nós k que satisfazem k ≡ 0 (mod 4) irão receber as
+somas parciais dos nós l = k + 2.
+
+Se t=2, então os nós k que satisfazem k ≡ 0 (mod 8) irão receber as
+somas parciais dos nós l = k + 4.
+
+Desta forma, podemos inferir uma regra geral, dada por:
+                                                                t+1
+Seja t o tempo atual. Então os nós k que satisfazem k ≡ 0 (mod 2   )
+                                        t
+recebem a soma parcial dos nós l = k + 2.
+
+                                                 t+1
+O algoritmo inicia com t = 0 e progride até que 2    ≥ ranks, onde ranks
+é o número de nós no tempo t = 0.
