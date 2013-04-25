@@ -1,6 +1,8 @@
 #include <common.h>
 #include <float.h>
 #include <math.h>
+#include <omp.h>
+#include <profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,14 +66,28 @@ void histogram(data_t *data, int data_len, data_t *data_bounds,
 	double dmin = (double)data_bounds[0];
 	double delt = (double)(data_bounds[1] - dmin);
 
-#pragma omp parallel for shared(data_len, bucket_len, dmin, delt, data, bucket)
-	for (int i = 0; i < data_len; i++) {
-		double r = bucket_len * (data[i] - dmin) / delt;
-		int b = (int)floor(r);
-		if (b == bucket_len)
-			b--;
-		if (b >= 0 && b < bucket_len)
-			bucket[b]++;
+	#pragma omp parallel
+	{
+		int tid = omp_get_thread_num();
+		int numt = omp_get_num_threads();
+		int *local_bucket[numt];
+
+		local_bucket[tid] = get_bucket(bucket_len);
+
+		#pragma omp for nowait
+		for (int i = 0; i < data_len; i++) {
+			double r = bucket_len * (data[i] - dmin) / delt;
+			int b = (int)floor(r);
+			if (b == bucket_len)
+				b--;
+			if (b >= 0 && b < bucket_len)
+				local_bucket[tid][b]++;
+		}
+
+		for (int i = 0; i < bucket_len; i++) {
+			#pragma omp atomic
+			bucket[i] += local_bucket[tid][i];
+		}
 	}
 }
 
@@ -107,24 +123,35 @@ void get_options(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-	int rank;
-	int n_ranks;
+	Profiler hist, main;
+	profiler_init(&hist, "histogram");
+	profiler_init(&main, "main");
 
 	get_options(argc, argv);
+
+	profiler_start(&main);
 
 	data_t data_bounds[2] = {DATA_MAX, DATA_MIN};
 	data_t *datain = get_data(DATA_LEN, data_bounds);
 	int *bucket = get_bucket(BUCKET_LEN);
+
+	profiler_start(&hist);
 	histogram(datain, DATA_LEN, data_bounds, bucket, BUCKET_LEN);
+	profiler_stop(&hist);
 
 	double dmin = (double)data_bounds[0];
 	double delt = (double)(data_bounds[1] - dmin);
-	printf("len %d\n", BUCKET_LEN);
-	printf("min %lf\n", dmin);
-	printf("del %lf\n", delt);
+	printf("Histogram:");
 	for (int i = 0; i < BUCKET_LEN; i++)
-		printf("%d ", bucket[i]);
+		printf(" %d", bucket[i]);
 	printf("\n");
+
+	profiler_stop(&main);
+
+	printf("Profiling data\n");
+	printf("==============\n");
+	profiler_print(&main);
+	profiler_print(&hist);
 
 	return 0;
 }
