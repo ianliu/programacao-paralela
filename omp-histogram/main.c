@@ -45,10 +45,10 @@ data_t *get_data(int len, data_t *data_bounds)
 }
 
 /**
- * Returns a zeroed vector of size @len to cache the partial result of the
+ * Returns a zeroed vector of size @len to hold the result of the
  * histogram.
  */
-int *get_bucket_cache(int len)
+int *get_bucket(int len)
 {
 	int *cache = malloc(sizeof(int) * len);
 	memset(cache, 0, sizeof(int) * len);
@@ -56,22 +56,22 @@ int *get_bucket_cache(int len)
 }
 
 /**
- * Calculate the histogram for the local problem given by @local_data and place
- * the result in @bucket_cache.
+ * Calculate the histogram and place the result in @bucket.
  */
-void histogram(data_t *local_data, int local_data_len, data_t *data_bounds,
-		int *bucket_cache, int cache_len)
+void histogram(data_t *data, int data_len, data_t *data_bounds,
+		int *bucket, int bucket_len)
 {
 	double dmin = (double)data_bounds[0];
 	double delt = (double)(data_bounds[1] - dmin);
 
-	for (int i = 0; i < local_data_len; i++) {
-		double r = cache_len * (local_data[i] - dmin) / delt;
+#pragma omp parallel for shared(data_len, bucket_len, dmin, delt, data, bucket)
+	for (int i = 0; i < data_len; i++) {
+		double r = bucket_len * (data[i] - dmin) / delt;
 		int b = (int)floor(r);
-		if (b == cache_len)
+		if (b == bucket_len)
 			b--;
-		if (b >= 0 && b < cache_len)
-			bucket_cache[b]++;
+		if (b >= 0 && b < bucket_len)
+			bucket[b]++;
 	}
 }
 
@@ -112,33 +112,19 @@ int main(int argc, char *argv[])
 
 	get_options(argc, argv);
 
-	int n_elements = DATA_LEN / n_ranks + 1;
 	data_t data_bounds[2] = {DATA_MAX, DATA_MIN};
-	data_t *datain;
-	data_t dataout[n_elements];
-	int displs[n_ranks];
-	int sendcnts[n_ranks];
+	data_t *datain = get_data(DATA_LEN, data_bounds);
+	int *bucket = get_bucket(BUCKET_LEN);
+	histogram(datain, DATA_LEN, data_bounds, bucket, BUCKET_LEN);
 
-	if (rank == 0)
-		datain = get_data(DATA_LEN, data_bounds);
-
-	int *bucket = get_bucket_cache(BUCKET_LEN);
-	histogram(dataout, sendcnts[rank], data_bounds, bucket, BUCKET_LEN);
-
-	int *result;
-	if (rank == 0)
-		result = get_bucket_cache(BUCKET_LEN);
-
-	if (rank == 0) {
-		double dmin = (double)data_bounds[0];
-		double delt = (double)(data_bounds[1] - dmin);
-		printf("len %d\n", BUCKET_LEN);
-		printf("min %lf\n", dmin);
-		printf("del %lf\n", delt);
-		for (int i = 0; i < BUCKET_LEN; i++)
-			printf("%d ", result[i]);
-		printf("\n");
-	}
+	double dmin = (double)data_bounds[0];
+	double delt = (double)(data_bounds[1] - dmin);
+	printf("len %d\n", BUCKET_LEN);
+	printf("min %lf\n", dmin);
+	printf("del %lf\n", delt);
+	for (int i = 0; i < BUCKET_LEN; i++)
+		printf("%d ", bucket[i]);
+	printf("\n");
 
 	return 0;
 }
