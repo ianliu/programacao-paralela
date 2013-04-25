@@ -1,5 +1,5 @@
 project(Histogram C)
 add_executable(histogram main.c)
 include_directories(${MPI_C_INCLUDE_PATH})
-target_link_libraries(histogram common ${MPI_C_LIBRARIES})
+target_link_libraries(histogram rt common ${MPI_C_LIBRARIES})
 
