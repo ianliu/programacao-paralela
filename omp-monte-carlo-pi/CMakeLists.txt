@@ -1,0 +1,5 @@
+project(OmpMonteCarloPi C)
+add_definitions(-D_BSD_SOURCE -D_XOPEN_SOURCE)
+add_executable(omp-monte-carlo-pi main.c)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+target_link_libraries(omp-monte-carlo-pi rt common)
