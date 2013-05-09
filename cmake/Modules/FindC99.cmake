@@ -163,8 +163,8 @@ main ()
 
 set(C99_C_FLAG_CANDIDATES
    " "
-   "-std=c99"
    "-std=gnu99"
+   "-std=c99"
    "-c99"
    "-AC99"
    "-xc99=all"
