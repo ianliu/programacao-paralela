@@ -1,9 +1,9 @@
 #include <common.h>
 #include <omp.h>
-/* #include <profiler.h> */
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /**
  * Sets the data type.
