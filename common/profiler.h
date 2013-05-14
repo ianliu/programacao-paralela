@@ -1,16 +1,17 @@
 #ifndef __PROFILER_H__
 #define __PROFILER_H__
 
+#define __STDC_FORMAT_MACROS
 #include <time.h>
+#include <inttypes.h>
 
-typedef unsigned long long uint64;
 typedef struct _Profiler Profiler;
 
 struct _Profiler {
 	char *name;
 	long runs;
-	uint64 total;
-	uint64 t0;
+	uint64_t total;
+	uint64_t t0;
 };
 
 void profiler_init(Profiler *prof, const char *name);
@@ -19,7 +20,7 @@ void profiler_free(Profiler *prof);
 
 void profiler_print(Profiler *prof);
 
-static __inline__ uint64 getticks(void)
+static __inline__ uint64_t getticks(void)
 {
 	struct timespec tp;
 	clock_gettime(CLOCK_MONOTONIC, &tp);

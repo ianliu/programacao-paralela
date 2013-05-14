@@ -18,6 +18,6 @@ void profiler_free(Profiler *prof)
 
 void profiler_print(Profiler *prof)
 {
-	printf("%-15s % 12lld %ld\n",
+	printf("%-15s %12"PRIu64" %ld\n",
 	       prof->name, prof->total, prof->runs);
 }
