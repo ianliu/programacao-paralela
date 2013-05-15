@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 PROG_PATH INPUT_FILE"
+  echo "Prints a table where lines represents the input size, columns are"
+  echo "different modes of execution (1 or 2 threads, for example) and the"
+  echo "values are the wall-clock time of the execution."
+  echo
+  echo "   PROG_PATH     The path for the binary to be executed"
+  echo "   INPUT_FILE    A file with at least 1e5 integers separated by blanks"
+  exit 1
+fi
+
+PRG=$1
+
+echo "Elements Quick-Sort 1-Thread 2-Threads 3-Threads 4-Threads"
+for n in 1000 10000 100000; do
+  line="$n"
+  for p in 1 2 3 4 q; do
+    case $p in
+      [1234])
+        cs=`OMP_NUM_THREADS=$p $PRG -n $n < $2 2>&1 >/dev/null`
+        line="$line $cs"
+        ;;
+      q)
+        qs=`$PRG -q -n $n < $2 2>&1 >/dev/null`
+        line="$line $qs"
+        ;;
+    esac
+  done
+  echo $line
+done
