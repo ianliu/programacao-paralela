@@ -14,5 +14,5 @@ target_link_libraries(omp-count-sort rt common m)
 #                              BENCHMARKS
 ########################################################################
 add_custom_target(benchmark
-	${CMAKE_CURRENT_SOURCE_DIR}/benchmark $<TARGET_FILE:omp-count-sort> ${CMAKE_CURRENT_SOURCE_DIR}/input.dat
+	${CMAKE_CURRENT_SOURCE_DIR}/benchmark $<TARGET_FILE:omp-count-sort> ${CMAKE_SOURCE_DIR}/data/random-input-100000.dat
 	DEPENDS omp-count-sort)
