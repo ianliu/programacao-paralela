@@ -14,3 +14,10 @@ add_definitions(${C99_C_FLAGS})
 
 add_executable(pth-histogram main.c)
 target_link_libraries(pth-histogram m rt common ${CMAKE_THREAD_LIBS_INIT})
+
+########################################################################
+#                              BENCHMARKS
+########################################################################
+add_custom_target(benchmark
+	${CMAKE_CURRENT_SOURCE_DIR}/benchmark $<TARGET_FILE:omp-count-sort> ${CMAKE_SOURCE_DIR}/data/random-input-100000.dat
+	DEPENDS pth-histogram)
