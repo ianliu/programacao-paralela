@@ -3,17 +3,24 @@
 #include <pthread.h>
 #include <inttypes.h>
 
+static const int STATE_SIZE = 8;
 static long R = 65535;
 static long R2 = 4294836225;
 
-void * worker(void *arg)
+void *worker(void *arg)
 {
 	long sum = 0;
 	long k = (long)arg;
+	char statebuf[STATE_SIZE];
+	struct random_data rd;
+	initstate_r(k, statebuf, STATE_SIZE, &rd);
 
 	for (long i = 0; i < k; i++) {
-		long x = rand() & R;
-		long y = rand() & R;
+		long x, y;
+		random_r(&rd, &x);
+		random_r(&rd, &y);
+		x &= R;
+		y &= R;
 		if (x*x + y*y < R2)
 			sum++;
 	}
