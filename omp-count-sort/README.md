@@ -1,13 +1,20 @@
 5.3 OpenMP Counting Sort
 ========================
 
-Questão a
----------
+Executando
+----------
+Para executar o benchmark, basta rodar
+
+    ./benchmark ./omp-count-sort ../data/random-input-100000.dat
+
+Questões
+--------
+
+### a
 As variáveis `i`, `j` e `count` devem ser privadas, ao passo que as
 variáveis `a`, `n` e `temp` devem ser compartilhadas.
 
-Questão b
----------
+### b
 Não haverá dependência de loop, uma vez que nenhuma variável
 compartilhada é alterada na mesma posição por duas threads. Vejamos, as
 variáveis `a` e `n` nunca são escritas, portanto não há conflitos nela.
@@ -15,8 +22,7 @@ Já a variável `temp` é modificiada pelas threads, mas como cada elemento
 do vetor tem exatamente uma posição bem definida, nenhuma thread irá
 escrever na mesma posição que outra.
 
-Questão c
----------
+### c
 A chamada para `memcpy` não pode ser paralelizada, entretanto podemos
 alterar o código para realizar esta operação em um loop; neste caso
 podemos paraleliza-lo.
@@ -25,12 +31,10 @@ podemos paraleliza-lo.
     for (i = 0; i < n; i++)
     	a[i] = temp[i];
 
-Questão d
----------
+### d
 O programa está em `main.c`.
 
-Questão e
----------
+### e
 O algoritmo de counting-sort dado é quadrático no número de elementos a
 serem ordenados. Testes mostraram que, mesmo sendo paralelizado, o
 algoritmo perde para o quick-sort, que é `n log n`. A tabela abaixo
