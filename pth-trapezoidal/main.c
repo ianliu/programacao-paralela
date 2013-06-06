@@ -149,14 +149,16 @@ void calc_indexes(long t, int *i0, int *iN) {
 void *worker(void *arg) {
 	long t = (long)arg;
 	int i0, iN;
-	double sum = 0.0;
+	double sum;
 	calc_indexes(t, &i0, &iN);
 
-	for (int i = i0; i < iN; i++)
-		sum += dx*(samples[i]+samples[i+1])/2;
+	sum = samples[i0];
+	for (int i = i0+1; i < iN-1; i++)
+		sum += 2*samples[i];
+	sum += samples[iN];
 
 	lock_lock(&lock);
-	global_sum += sum;
+	global_sum += dx * sum / 2;
 	lock_unlock(&lock);
 
 	return NULL;
