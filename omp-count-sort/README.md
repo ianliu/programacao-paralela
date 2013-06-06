@@ -36,14 +36,14 @@ serem ordenados. Testes mostraram que, mesmo sendo paralelizado, o
 algoritmo perde para o quick-sort, que é `n log n`. A tabela abaixo
 mostra os resultados gerados ao executar o benchmark.
 
-    Elements    1-Thread    2-Thread   3-Threads   4-Threads Quick-Sort
+    Elements    1-Thread   2-Threads   3-Threads   4-Threads Quick-Sort
         1000     9160108     4669623     3164560     2956490     230942
        10000   915967266   473209914   310594737   244862219    1882896
       100000 91623892739 45809274943 30736720102 24242175754   22359816
 
 E abaixo mostro o speedup em relação ao Counting-Sort com uma thread:
 
-    Elements 1-Thread 2-Thread 3-Threads 4-Threads Quick-Sort
-        1000      1.0     1.96      2.89      3.10      39.66
-       10000      1.0     1.94      2.95      3.74     486.47
-      100000      1.0     2.00      2.98      3.78    4097.70
+    Elements 1-Thread 2-Threads 3-Threads 4-Threads Quick-Sort
+        1000      1.0      1.96      2.89      3.10      39.66
+       10000      1.0      1.94      2.95      3.74     486.47
+      100000      1.0      2.00      2.98      3.78    4097.70
