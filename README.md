@@ -36,3 +36,7 @@ inteiras. Veja alguns exemplos de execução:
     $ seq 1 10 | mpirun -np 10 histogram/histogram -n 10 -b 5
     [Histogram result]
     1 2 2 2 3
+
+Status da integração contínua
+=============================
+[![Build Status](https://travis-ci.org/ianliu/programacao-paralela.png?branch=master)](https://travis-ci.org/ianliu/programacao-paralela)
