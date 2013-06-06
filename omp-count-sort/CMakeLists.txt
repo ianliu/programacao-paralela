@@ -9,10 +9,3 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 
 add_executable(omp-count-sort main.c)
 target_link_libraries(omp-count-sort rt common m)
-
-########################################################################
-#                              BENCHMARKS
-########################################################################
-add_custom_target(benchmark
-	${CMAKE_CURRENT_SOURCE_DIR}/benchmark $<TARGET_FILE:omp-count-sort> ${CMAKE_SOURCE_DIR}/data/random-input-100000.dat
-	DEPENDS omp-count-sort)

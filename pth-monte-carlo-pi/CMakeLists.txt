@@ -14,10 +14,3 @@ add_definitions(${C99_C_FLAGS})
 
 add_executable(pth-monte-carlo-pi main.c)
 target_link_libraries(pth-monte-carlo-pi m rt common ${CMAKE_THREAD_LIBS_INIT})
-
-########################################################################
-#                              BENCHMARKS
-########################################################################
-add_custom_target(benchmark
-	${CMAKE_CURRENT_SOURCE_DIR}/benchmark $<TARGET_FILE:omp-count-sort> ${CMAKE_SOURCE_DIR}/data/random-input-100000.dat
-	DEPENDS pth-monte-carlo-pi)
