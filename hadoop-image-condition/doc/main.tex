@@ -1,0 +1,57 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\begin{document}
+
+\title{Condição de Imagem com Hadoop}
+\author{Ian Liu Rodrigues -- 061485}
+\maketitle
+
+\begin{abstract}
+  A \emph{condição de imagem} é uma etapa do algoritmo \emph{Migração em
+  Tempo Reverso}, ou \emph{MTR}, cujo objetivo é criar um mapa de
+  coerência de sinais coletados em campo.
+\end{abstract}
+
+\section{Introdução}
+
+\subsection{Cubo de dados}
+
+Um cubo de dados de tamanho $n_z \times n_x \times n_t$ representa um
+filme da evolução de ondas acústicas se propagando em uma malha de
+tamanho $n_z \times n_x$. Cada fatia do dado no plano $XZ$ representa
+amplitudes de pressão num dado tempo $t$. Em disco, um cubo de dados
+pode chegar a ocupar alguns gigabytes.
+
+Os cubos de dados são gerados por meios de simulações acústicas. O
+método das diferenças finitas pode ser usado para realizar tais
+simulações.
+
+\subsection{Fonte}
+
+Uma fonte sísmica pode ser um explosivo que gera grandes pressões no
+solo. Essas ondas de pressão se propagam na estrutura rochosa e são
+refletidas quando encontram mudanças de solo, rupturas, etc.
+
+Uma das entradas para o problema da \emph{condição de imagem} é o cubo
+de dados gerado por uma fonte.
+
+\subsection{Receptor}
+
+Um receptor é um sismógrafo que coleta vibrações na superfície do solo.
+No algoritmo \emph{MTR} essas vibrações são usadas para gerar vários
+cubos de dados, um para cada receptor. Estes cubos também são dados de
+entrada para calcular a condição de imagem.
+
+\section{Condição de Imagem}
+
+A condição de imagem consiste em realizar uma multiplicação
+ponto-a-ponto de cada cubo de dados gerados pelos receptores com o cubo
+de dados gerado pela fonte. Após este procedimento, somamos todos esses
+resultados em um só
+
+\section{Exemplo}
+
+\end{document}

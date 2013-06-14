@@ -5,3 +5,5 @@ include(UseJava)
 
 set(CMAKE_JAVA_INCLUDE_PATH hadoop-core-1.0.4.jar)
 add_jar(wc WordCount.java)
+
+add_subdirectory(doc)
