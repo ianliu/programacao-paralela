@@ -18,10 +18,12 @@ import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -57,27 +59,17 @@ public class ImageCondition extends Configured implements Tool {
         private long numRecords = 0;
         private String inputFile;
 
+        private int nz;
+        private int nx;
+
         public void configure(JobConf job) {
-            caseSensitive = job.getBoolean("wordcount.case.sensitive", true);
-            inputFile = job.get("map.input.file");
+            nz = job.getInt("imagecond.size.nz", -1);
+            nx = job.getInt("imagecond.size.nx", -1);
         }
 
-        public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
-            String line = (caseSensitive) ? value.toString() : value.toString().toLowerCase();
-            for (String pattern : patternsToSkip) {
-                line = line.replaceAll(pattern, "");
-            }
-            StringTokenizer tokenizer = new StringTokenizer(line);
-            while (tokenizer.hasMoreTokens()) {
-                word.set(tokenizer.nextToken());
-                output.collect(word, one);
-                reporter.incrCounter(Counters.INPUT_WORDS, 1);
-            }
-            if ((++numRecords % 100) == 0) {
-                reporter.setStatus("Finished processing " + numRecords +
-                        " records " + "from the input file: " +
-                        inputFile);
-            }
+        public void map(LongWritable key, FloatArrayWritable value, OutputCollector<Text, IntWritable> output, Reporter reporter)
+            throws IOException
+        {
         }
     }
 
@@ -241,5 +233,22 @@ class CubeRecordReader implements RecordReader<LongWritable, FloatArrayWritable>
     public synchronized void close() throws IOException {
         if (in != null)
             in.close();
+    }
+}
+
+class FloatArrayWritable extends ArrayWritable {
+    public FloatArrayWritable() {
+        super(FloatWritable.class);
+    }
+
+    public FloatArrayWritable(FloatWritable[] values) {
+        super(FloatWritable.class, values);
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (String s : super.toStrings())
+            sb.append(s).append(" ");
+        return sb.toString();
     }
 }
