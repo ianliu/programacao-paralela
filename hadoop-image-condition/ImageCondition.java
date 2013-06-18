@@ -49,6 +49,7 @@ public class ImageCondition extends Configured implements Tool {
 
     public static class Map extends MapReduceBase implements Mapper<LongWritable, FloatArrayWritable, Text, IntWritable> {
 
+        private boolean big_endian = false;
         private int nz;
         private int nx;
         RandomAccessFile source;
@@ -56,6 +57,8 @@ public class ImageCondition extends Configured implements Tool {
         public void configure(JobConf job) {
             nz = job.getInt("imagecond.size.nz", -1);
             nx = job.getInt("imagecond.size.nx", -1);
+            big_endian = job.getBoolean("imagecond.big_endian", false);
+
             try {
                 Path[] files = DistributedCache.getLocalCacheFiles(job);
                 Path src = files[0];
@@ -67,14 +70,20 @@ public class ImageCondition extends Configured implements Tool {
         }
 
         private float[] getSourceFrame(long offt) {
+            float[] v = new float[nz*nx];
             long frame = offt/(nz*nx);
             source.seek(frame);
-            int k;
             try {
-                k = source.readInt();
-            } catch () {
+                for (int i = 0; i < nz*nx; i++) {
+                    int k = source.readInt();
+                    if (!big_endian)
+                        k = Integer.reverseBytes(k);
+                    v[i] = Float.intBitsToFloat(k);
+                }
+            } catch (EOFException e) {
                 return null;
             }
+            return v;
         }
 
         public void map(LongWritable key, FloatArrayWritable value, OutputCollector<Text, IntWritable> output, Reporter reporter)
