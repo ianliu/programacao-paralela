@@ -1,6 +1,7 @@
 package org.myorg;
 
 import java.io.BufferedReader;
+import java.io.RandomAccessFile;
 import java.io.EOFException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -46,25 +47,34 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class ImageCondition extends Configured implements Tool {
 
-    public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
-
-        static enum Counters { INPUT_WORDS }
-
-        private final static IntWritable one = new IntWritable(1);
-        private Text word = new Text();
-
-        private boolean caseSensitive = true;
-        private Set<String> patternsToSkip = new HashSet<String>();
-
-        private long numRecords = 0;
-        private String inputFile;
+    public static class Map extends MapReduceBase implements Mapper<LongWritable, FloatArrayWritable, Text, IntWritable> {
 
         private int nz;
         private int nx;
+        RandomAccessFile source;
 
         public void configure(JobConf job) {
             nz = job.getInt("imagecond.size.nz", -1);
             nx = job.getInt("imagecond.size.nx", -1);
+            try {
+                Path[] files = DistributedCache.getLocalCacheFiles(job);
+                Path src = files[0];
+                source = new RandomAccessFile(src.toString(), 'r');
+            } catch (IOException ioe) {
+                System.err.println("Caught exception while getting cached files: "
+                        + StringUtils.stringifyException(ioe));
+            }
+        }
+
+        private float[] getSourceFrame(long offt) {
+            long frame = offt/(nz*nx);
+            source.seek(frame);
+            int k;
+            try {
+                k = source.readInt();
+            } catch () {
+                return null;
+            }
         }
 
         public void map(LongWritable key, FloatArrayWritable value, OutputCollector<Text, IntWritable> output, Reporter reporter)
@@ -138,7 +148,9 @@ class CubeInputFormat
         throws IOException
     {
         reporter.setStatus(genericSplit.toString());
-        return new CubeRecordReader(job, (FileSplit) genericSplit, 9);
+        int nz = job.getInt("imagecond.size.nz", -1);
+        int nx = job.getInt("imagecond.size.nx", -1);
+        return new CubeRecordReader(job, (FileSplit) genericSplit, nz*nx);
     }
 }
 
