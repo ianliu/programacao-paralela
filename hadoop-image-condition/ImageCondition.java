@@ -1,10 +1,12 @@
 package org.myorg;
 
 import java.io.BufferedReader;
-import java.io.RandomAccessFile;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -24,7 +26,7 @@ import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -47,29 +49,34 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class ImageCondition extends Configured implements Tool {
 
-    public static class Map extends MapReduceBase implements Mapper<LongWritable, FloatArrayWritable, Text, IntWritable> {
-
-        private boolean big_endian = false;
+    public static class Map
+            extends MapReduceBase
+            implements Mapper<LongWritable, FloatArrayWritable, IntWritable, FloatWritable>
+    {
         private int nz;
         private int nx;
+        private boolean big_endian = false;
+        String inputFile;
         RandomAccessFile source;
 
-        public void configure(JobConf job) {
-            nz = job.getInt("imagecond.size.nz", -1);
-            nx = job.getInt("imagecond.size.nx", -1);
-            big_endian = job.getBoolean("imagecond.big_endian", false);
+        public void configure(JobConf conf)
+        {
+            nz = conf.getInt("imagecond.size.nz", -1);
+            nx = conf.getInt("imagecond.size.nx", -1);
+            big_endian = conf.getBoolean("imagecond.big_endian", false);
+            inputFile = conf.get("map.input.file");
 
             try {
-                Path[] files = DistributedCache.getLocalCacheFiles(job);
+                Path[] files = DistributedCache.getLocalCacheFiles(conf);
                 Path src = files[0];
-                source = new RandomAccessFile(src.toString(), 'r');
+                source = new RandomAccessFile(src.toString(), "r");
             } catch (IOException ioe) {
                 System.err.println("Caught exception while getting cached files: "
                         + StringUtils.stringifyException(ioe));
             }
         }
 
-        private float[] getSourceFrame(long offt) {
+        private float[] getSourceFrame(long offt) throws IOException {
             float[] v = new float[nz*nx];
             long frame = offt/(nz*nx);
             source.seek(frame);
@@ -86,19 +93,34 @@ public class ImageCondition extends Configured implements Tool {
             return v;
         }
 
-        public void map(LongWritable key, FloatArrayWritable value, OutputCollector<Text, IntWritable> output, Reporter reporter)
+        @Override
+        public void map(LongWritable key, FloatArrayWritable value,
+                OutputCollector<IntWritable, FloatWritable> output,
+                Reporter reporter)
             throws IOException
         {
+            float[] frame = getSourceFrame(key.get());
+            FloatWritable[] v = (FloatWritable[]) value.get();
+            for (int i = 0; i < v.length; i++)
+                output.collect(new IntWritable(i), new FloatWritable(frame[i]*v[i].get()));
         }
     }
 
-    public static class Reduce extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
-        public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
-            int sum = 0;
+    public static class Reduce
+            extends MapReduceBase
+            implements Reducer<IntWritable, FloatWritable, IntWritable, FloatWritable>
+    {
+        @Override
+        public void reduce(IntWritable key, Iterator<FloatWritable> values,
+                OutputCollector<IntWritable, FloatWritable> output,
+                Reporter reporter)
+            throws IOException
+        {
+            float sum = 0;
             while (values.hasNext()) {
                 sum += values.next().get();
             }
-            output.collect(key, new IntWritable(sum));
+            output.collect(key, new FloatWritable(sum));
         }
     }
 
@@ -106,8 +128,8 @@ public class ImageCondition extends Configured implements Tool {
         JobConf conf = new JobConf(getConf(), ImageCondition.class);
         conf.setJobName("image-condition");
 
-        conf.setOutputKeyClass(LongWritable.class);
-        conf.setOutputValueClass(FloatArrayWritable.class);
+        conf.setOutputKeyClass(IntWritable.class);
+        conf.setOutputValueClass(FloatWritable.class);
 
         conf.setMapperClass(Map.class);
         conf.setReducerClass(Reduce.class);
@@ -115,7 +137,8 @@ public class ImageCondition extends Configured implements Tool {
         conf.setInputFormat(CubeInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
 
-        for (int i = 0; i < args.length; i++) {
+        int i;
+        for (i = 0; i < args.length; i++) {
             if (args[i].equals("-s") || args[i].equals("--source")) {
                 DistributedCache.addCacheFile(new Path(args[++i]).toUri(), conf);
             } else if (args[i].equals("-r") || args[i].equals("--receptors")) {
@@ -153,7 +176,8 @@ class CubeInputFormat
         return compressionCodecs.getCodec(file) == null;
     }
 
-    public RecordReader<LongWritable, FloatArrayWritable> getRecordReader(InputSplit genericSplit, JobConf job, Reporter reporter)
+    public RecordReader<LongWritable, FloatArrayWritable>
+        getRecordReader(InputSplit genericSplit, JobConf job, Reporter reporter)
         throws IOException
     {
         reporter.setStatus(genericSplit.toString());
@@ -203,7 +227,9 @@ class CubeRecordReader implements RecordReader<LongWritable, FloatArrayWritable>
         return new FloatArrayWritable();
     }
 
-    public synchronized boolean next(LongWritable key, FloatArrayWritable value) throws IOException {
+    public synchronized boolean next(LongWritable key, FloatArrayWritable value)
+        throws IOException
+    {
         if (pos >= end)
             return false;
 
